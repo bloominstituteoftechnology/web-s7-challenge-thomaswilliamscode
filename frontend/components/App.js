@@ -9,15 +9,13 @@ function App() {
 			<nav>
 				{/* NavLinks here */}
 				<Link to={'/'}>Home</Link>
-				<Link to={'order'}>Order</Link>
+				<Link to={'/order'}>Order</Link>
 			</nav>
 			{/* Route and Routes here */}
 			<Routes>
 				<Route path={'/'} element={<Home />} />
 				<Route path={'/order'} element={<Form />} />
 			</Routes>
-			<Home />
-			<Form />
 		</div>
 	);
 }
