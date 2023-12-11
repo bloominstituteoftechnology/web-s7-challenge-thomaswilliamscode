@@ -74,6 +74,7 @@ const [failure, setFailure] = useState('');
 const [yupError, setYupError] = useState(initialErrors)
 const [yupReady, setYupReady] = useState(false)
 const [submit, setSubmit] = useState(false)
+const [start, setStart] = useState(false)
 
 useEffect( () => {
 	// console.log(toppingsState)
@@ -88,6 +89,10 @@ useEffect( () => {
 // 		setYupReady(false);
 // 	}
 // }, [formDisabled])
+
+useEffect( () => {
+	console.log(form.size)
+}, [form.size])
 
 useEffect( () => {
 	// console.log(form)
@@ -160,6 +165,7 @@ function validate(id, value) {
 }
 
 const onChange = (evt) => {
+	
   let { id, value, checked} = evt.target
   
 	if (id.length <= 2 ) {
@@ -167,6 +173,9 @@ const onChange = (evt) => {
 	} else {
 		setForm({ ...form, [id]: value });
 		validate(id, value)
+		if(id === 'size') {
+			setStart(true)
+		}
 	}
   
   
@@ -222,6 +231,7 @@ function postRequest() {
 			setForm(initialForm);
 			setToppings(initialToppings);
 			setSubmit(false);
+			setStart(false);
 		});
 }
 
@@ -257,12 +267,12 @@ function onSubmit(evt) {
 					<label htmlFor='size'>Size</label>
 					<br />
 					<select id='size' value={form.size}onChange={onChange}>
-						<option value='choose'>----Choose Size----</option>
+						<option value=''>----Choose Size----</option>
 						{/* Fill out the missing options */}
 						{sizeMap()}
 					</select>
 				</div>
-				{form.size && <div className='error'>{yupError.size}</div>}
+				{(!form.size && start) ? <div className='error'>{yupError.size}</div> : null}
 			</div>
 
 			<div className='input-group'>
