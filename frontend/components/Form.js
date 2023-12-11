@@ -73,6 +73,7 @@ const [success, setSuccess] = useState('');
 const [failure, setFailure] = useState('');
 const [yupError, setYupError] = useState(initialErrors)
 const [yupReady, setYupReady] = useState(false)
+const [submit, setSubmit] = useState(false)
 
 useEffect( () => {
 	// console.log(toppingsState)
@@ -98,7 +99,7 @@ useEffect( () => {
 		.then(res => {
 			setSuccess(res.data.message)
 			setFailure('')
-			setForm(initialForm)
+			
 		})
 		.catch(err => {
 			setFailure(err.response.data.message)
@@ -107,11 +108,18 @@ useEffect( () => {
 	}
 }, [form.toppings])
 
+useEffect( () => {
+	if (submit) {
+		setForm(initialForm)
+		setSubmit(false)
+	}
+}, [submit])
+
 function dealWithToppings(checked, id, value) {
 	setToppings({...toppingsState, [value]: checked})
 }
 
-function fixToppings(obj) {
+function fixToppings(obj, callback) {
 	let selectedToppings = []
 	for (let key in obj) {
 		if (obj[key] === true) {
@@ -125,7 +133,8 @@ function fixToppings(obj) {
 			});
 		}
 	}
-	setForm((prevForm) => ({...prevForm, toppings: selectedToppings}))
+	setForm((prevForm) => ({...prevForm, toppings: selectedToppings}), callback)
+	
 }
 
 const onChange = (evt) => {
@@ -186,7 +195,10 @@ function onSubmit(evt) {
 	// let {customer: fullName} = form
 	// delete form.customer
 	// form.fullName = fullName
-	fixToppings(toppingsState)
+	fixToppings(toppingsState, () => {
+		setSubmit(true);
+	})
+	
 
 }
 
