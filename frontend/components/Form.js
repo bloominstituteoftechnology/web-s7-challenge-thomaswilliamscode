@@ -27,11 +27,11 @@ const formSchema = yup.object({
 
 // 👇 This array could help you construct your checkboxes using .map in the JSX.
 const toppings = [
-  { topping_id: '1', text: 'Pepperoni' },
-  { topping_id: '2', text: 'Green Peppers' },
-  { topping_id: '3', text: 'Pineapple' },
-  { topping_id: '4', text: 'Mushrooms' },
-  { topping_id: '5', text: 'Ham' },
+  { topping_id: "1", text: 'Pepperoni' },
+  { topping_id: "2", text: 'Green Peppers' },
+  { topping_id: "3", text: 'Pineapple' },
+  { topping_id: "4", text: 'Mushrooms' },
+  { topping_id: "5", text: 'Ham' },
 ]
 
 
@@ -46,7 +46,7 @@ const sizes = [
 let initialForm = {
   size: '',
   fullName: '',
-  toppings: []
+  toppings: [],
 }
 let initialErrors = {
 	size: '',
@@ -77,7 +77,17 @@ const [submit, setSubmit] = useState(false)
 
 useEffect( () => {
 	// console.log(toppingsState)
-}, [toppingsState])
+	// console.log(form)
+	// console.log(' ')
+}, [form.toppings])
+
+// useEffect(() => {
+// 	if (!formDisabled) {
+// 		setYupReady(true);
+// 	} else {
+// 		setYupReady(false);
+// 	}
+// }, [formDisabled])
 
 useEffect( () => {
 	// console.log(form)
@@ -85,7 +95,6 @@ useEffect( () => {
 		.isValid(form)
 		.then((res) => {
 			setFormDisabled(!res) 
-			setYupReady(true)
 		})
 		.catch((err) => {
 			console.log(err)
@@ -94,32 +103,32 @@ useEffect( () => {
 }, [form])
 
 useEffect( () => {
-	if (yupReady) {
-		axios.post(endpoint, form)
-		.then(res => {
-			setSuccess(res.data.message)
-			setFailure('')
-			
-		})
-		.catch(err => {
-			setFailure(err.response.data.message)
-			setSuccess('');
-		})
+	if(submit){
+		postRequest();
 	}
+	
 }, [form.toppings])
 
-useEffect( () => {
-	if (submit) {
-		setForm(initialForm)
-		setSubmit(false)
-	}
-}, [submit])
+// function theEnd(){
+// 	if (submit) {
+// 		setForm(initialForm);
+// 		setSubmit(false);
+// 	}
+// }
+
+// useEffect( () => {
+// 	if (submit) {
+// 		setSubmit(false)
+// 		setForm(initialForm)
+		
+// 	}
+// }, [submit])
 
 function dealWithToppings(checked, id, value) {
 	setToppings({...toppingsState, [value]: checked})
 }
 
-function fixToppings(obj, callback) {
+function fixToppings(obj) {
 	let selectedToppings = []
 	for (let key in obj) {
 		if (obj[key] === true) {
@@ -133,8 +142,21 @@ function fixToppings(obj, callback) {
 			});
 		}
 	}
-	setForm((prevForm) => ({...prevForm, toppings: selectedToppings}), callback)
+	setForm( {...form, toppings: selectedToppings})
 	
+}
+
+function validate(id, value) {
+	yup
+		.reach(formSchema, id)
+		.validate(value)
+		.then(() => {
+			setYupError({ ...yupError, [id]: '' });
+			// setForm(initialForm)
+		})
+		.catch((err) => {
+			setYupError({ ...yupError, [id]: err.errors[0] });
+		});
 }
 
 const onChange = (evt) => {
@@ -144,15 +166,7 @@ const onChange = (evt) => {
 		dealWithToppings(checked, id, value)
 	} else {
 		setForm({ ...form, [id]: value });
-		yup
-			.reach(formSchema, id)
-			.validate(value)
-			.then(() => {
-				setYupError({ ...yupError, [id]: '' });
-			})
-			.catch((err) => {
-				setYupError({ ...yupError, [id]: err.errors[0] });
-			});
+		validate(id, value)
 	}
   
   
@@ -177,7 +191,7 @@ function toppingsMap() {
 				<input
 					id={id}
 					onChange={onChange}
-					checked={toppingsState.text}
+					checked={toppingsState[text]}
 					name='topping'
 					type='checkbox'
 					value={text}
@@ -189,17 +203,32 @@ function toppingsMap() {
 	});
 }
 
+function postRequest() {
+	
+	axios
+		.post(endpoint, form)
+		.then((res) => {
+			console.log(form);
+			console.log(res.data)
+			setSuccess(res.data.message);
+			setFailure('');
+		})
+		.catch((err) => {
+			setFailure(err.response.data.message);
+			setSuccess('');
+		})
+		.finally(() => {
+			
+			setForm(initialForm);
+			setToppings(initialToppings);
+			setSubmit(false);
+		});
+}
+
 function onSubmit(evt) {
 	evt.preventDefault()
-	
-	// let {customer: fullName} = form
-	// delete form.customer
-	// form.fullName = fullName
-	fixToppings(toppingsState, () => {
-		setSubmit(true);
-	})
-	
-
+	setSubmit(true)
+	fixToppings(toppingsState)
 }
 
   return (
@@ -214,6 +243,7 @@ function onSubmit(evt) {
 					<br />
 					<input
 						placeholder='Type full name'
+						value={form.fullName}
 						id='fullName'
 						type='text'
 						onChange={onChange}
@@ -226,7 +256,7 @@ function onSubmit(evt) {
 				<div>
 					<label htmlFor='size'>Size</label>
 					<br />
-					<select id='size' onChange={onChange}>
+					<select id='size' value={form.size}onChange={onChange}>
 						<option value='choose'>----Choose Size----</option>
 						{/* Fill out the missing options */}
 						{sizeMap()}
